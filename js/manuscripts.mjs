@@ -32,31 +32,43 @@ class GlossManuscriptThumb extends HTMLElement {
     super()
     this.ms = new GlossManuscript()
     this.ms.id = this.getAttribute("glossing-id")
-    this.setAttribute("glossing-is",this.ms.is)
-    this.template = `<li glossing-is="${this.ms.is}" glossing-id="${this.ms.id}" class="loading">
+    this.setAttribute("glossing-is", this.ms.is)
+    this.template = `<li glossing-is="${this.ms.is}" glossing-id="${this.ms.id}">
     <header class="label">${this.ms.label ?? ""}</header>
-    <img class="thumb" src="${this.ms.thumb}">
-    <span class="description">${this.ms.description}</span>
+    <img class="thumb" src="${this.ms.thumb || DEFAULT_THUMB}">
+    <span class="description">${this.ms.description ?? ""}</span>
     </li>
     `
+    this.classList.add("loading")
+    this.innerHTML = this.template
   }
 
-  connectedCallback(){
+  connectedCallback() {
     this.render()
   }
 
   render() {
     let item = document.querySelector(`[glossing-is="${this.ms.is}"]`)
-    if (!(item ?? false)) {throw Error("Attempted to render missing element.")}
+    if (!(item ?? false)) { throw Error("Attempted to render missing element.") }
     const label = this.ms.name ?? this.ms.label ?? this.ms.title ?? false
     if (label) {
       item.querySelector('.label').innerHTML = label
       item.classList.remove("loading")
+    } else {
+      _fetchLabel(this.ms["@id"] ?? this.ms.id).then(name => {
+        this.ms.name = name
+        this.render()
+      })
     }
-    _fetchLabel(this.ms["@id"] ?? this.ms.id).then(name => {
-      this.ms.name = name
-      this.render()
-    })
+    if (this.ms.thumb !== DEFAULT_THUMB) {
+      item.querySelector('.thumb').src = this.ms.thumb
+      item.classList.remove("loading")
+    } else {
+      _fetchImage(this.ms["@id"] ?? this.ms.id).then(src => {
+        this.ms.thumb = src || DEFAULT_THUMB
+        this.render()
+      })
+    }
   }
 }
 
@@ -121,8 +133,43 @@ class GlossManuscripts extends HTMLElement {
 
 customElements.define("gloss-manuscripts", GlossManuscripts)
 
-async function _fetchImage(target) {
-
+async function _fetchImage(uri) {
+  const TPEN_PROJECT_NUMBER = "tpen://base-project"
+  try {
+    const filterObj = {
+      "__rerum.history.next": { $exists: true, $size: 0 },
+    }
+    const queryObj = {
+      target: uri
+    }
+    // Object.defineProperty(queryObj, "body['" + TPEN_PROJECT_NUMBER + "']", { $exists: true })
+    Object.assign(queryObj, filterObj)
+    const pointers = await fetch(RERUM_URL + "query", {
+      method: "POST",
+      mode: "cors",
+      body: JSON.stringify(queryObj),
+    })
+      .then((response) => response.json())
+    if (!pointers[0]) { return false }
+    let imguri = false
+    for (const anno of pointers) {
+      if (anno.body[TPEN_PROJECT_NUMBER]) {
+        imguri = _getValue(anno.body[TPEN_PROJECT_NUMBER])
+        break
+      }
+    }
+    if (!imguri) { return false }
+    const manifest = await fetch("http://t-pen.org/TPEN/manifest/" + imguri)
+      .then(res => res.json())
+    if (manifest.thumbnail) {
+      return manifest.thumbnail[0].id ?? manifest.thumbnail[0]['@id'] ?? manifest.thumbnail.id ?? manifest.thumbnail['@id'] ?? manifest.thumbnail
+    }
+    const canvases = manifest.items ?? manifest.sequences[0]?.canvases
+    const middleCanvas = canvases[Math.floor(canvases.length / 2)]
+    return (middleCanvas.items && middleCanvas.items[0].id) ?? (middleCanvas.images && (middleCanvas.images[0]?.resource['@id'] ?? middleCanvas.images[0]?.resource.id)) ?? false
+  } catch (err) {
+    console.error("Image not found")
+  }
 }
 
 async function _fetchLabel(target) {
@@ -147,14 +194,13 @@ async function _fetchLabel(target) {
   }
   Object.assign(queryObj, filterObj)
   try {
-    const response = await fetch(RERUM_URL + "query", {
+    const annos = await fetch(RERUM_URL + "query", {
       method: "POST",
       mode: "cors",
       body: JSON.stringify(queryObj),
-    })
-    const annos = await response.json()
+    }).then(response => response.json())
     for (const a of annos) {
-      const label = this._getLabel(a.body, "")
+      const label = _getLabel(a.body, "")
       if (label?.length) {
         return label
       }
@@ -169,10 +215,10 @@ function _getLabel(obj, noLabel = "[ unlabeled ]", options = {}) {
   if (typeof obj === "string") { return obj }
   let label = obj[options.label] || obj.name || obj.label || obj.title
   if (Array.isArray(label)) {
-    label = [...new Set(label.map(l => this._getValue(l)))]
+    label = [...new Set(label.map(l => _getValue(l)))]
   }
   if (typeof label === "object") {
-    label = this._getValue(label)
+    label = _getValue(label)
   }
   return label || noLabel
 }

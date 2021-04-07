@@ -1,41 +1,73 @@
 :root {
-  --main-bg-color: #dfdfdf;
-  --dark-bg-color: #3f3f3f;
+  --main-bg-color    : #dfdfdf;
+  --dark-bg-color    : #3f3f3f;
+  --dark-accent-color: #823d00;
 }
+
 html {
-  width:100vw;
+  width   : 100vw;
   overflow: hidden;
 }
+
 .loading {
   min-width: 5rem;
 }
 
 li.loading {
-  width: 5em;
-  line-height: 1.25;
+  width           : 5em;
+  line-height     : 1.25;
   background-color: var(--main-bg-color) !important;
-  border-radius: 0.75em !important;
-  color: var(--main-bg-color) !important;
-  margin-bottom: 0.25em;
-  height:5em;
+  border-radius   : 0.75em !important;
+  color           : var(--main-bg-color) !important;
+  margin-bottom   : 0.25em;
+  height          : 5em;
 }
+
 ul.tiled {
-  display: flex;
+  display  : flex;
   flex-wrap: wrap;
-  margin:0;
-  padding:0;
+  margin   : 0;
+  padding  : 0;
 
 }
+
 ul.tiled li {
-  max-width: 10em;
-  padding: .25em;
-  margin: .125em;
-  box-shadow: -2px -1px 4px rgba(0,0,0,.4);
-  display: inline-flex;
-  flex-grow: 1;
-  flex-basis: 5em;
-  height: 5em;
+  max-width       : 10em;
+  padding         : .25em;
+  margin          : .5em;
+  box-shadow      : -2px -1px 4px rgba(0, 0, 0, .4);
+  display         : inline-flex;
+  flex-grow       : 1;
+  flex-basis      : 5em;
+  height          : 5em;
   background-color: white;
-  border-radius: 0;
-  transition: all .5s;
+  border-radius   : 0;
+  transition      : all .5s;
+  min-width       : 5em;
+  position: relative;
+  overflow: hidden;
+}
+
+ul.tiled header.label {
+  position                  : absolute;
+  padding                   : .125em;
+  top:0;
+  left:0;
+  font-size                 : 200%;
+  color                     : var(--dark-accent-color);
+  text-shadow               : 1px 1px 1px var(--main-bg-color);
+  background                : rgba(255, 255, 255, .5);
+  border-bottom-right-radius: 25%;
+  border-right: var(--dark-accent-color) 1.5px solid;
+  border-bottom: var(--dark-accent-color) 1.5px solid;
+  z-index: 1;
+}
+
+ul.tiled li img {
+  margin    : 0 auto;
+  position: absolute;
+  z-index: 0;
+  width: 200%;
+  top: -20%;
+  left: -20%;
 }
