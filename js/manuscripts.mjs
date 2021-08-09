@@ -50,15 +50,15 @@ class GlossManuscriptThumb extends HTMLElement {
     let item = document.querySelector(`[glossing-is="${this.ms.is}"]`)
     if (!(item ?? false)) { throw Error("Attempted to render missing element.") }
     const label = this.ms.name ?? this.ms.label ?? this.ms.title ?? false
-    if (label) {
-      item.querySelector('.label').innerHTML = label
-      item.classList.remove("loading")
-    } else {
-      _fetchLabel(this.ms["@id"] ?? this.ms.id).then(name => {
+    if (!label) {
+      return _fetchLabel(this.ms["@id"] ?? this.ms.id).then(name => {
         this.ms.name = name
-        this.render()
+        if (lastCall) return
+        this.render(true)
       })
     }
+    item.querySelector('.label').innerHTML = label
+    item.classList.remove("loading")
     if (this.ms.thumb !== DEFAULT_THUMB) {
       item.querySelector('.thumb').src = this.ms.thumb
       item.classList.remove("loading")
@@ -66,7 +66,7 @@ class GlossManuscriptThumb extends HTMLElement {
       _fetchImage(this.ms["@id"] ?? this.ms.id).then(src => {
         this.ms.thumb = src || DEFAULT_THUMB
         if (lastCall) return
-        this.render(lastCall)
+        this.render(true)
       })
     }
   }

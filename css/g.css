@@ -17,6 +17,10 @@ h1,h2,h3 {
   box-shadow:0 1em 0 -.9em var(--dark-bg-color);
 }
 
+footer {
+  font-size: 0.68em;
+}
+
 .loading {
   min-width: 5rem;
 }
