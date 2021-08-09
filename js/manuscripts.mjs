@@ -2,10 +2,10 @@ const RERUM_URL = "http://tinydev.rerum.io/app/"
 const DEFAULT_THUMB = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
 
 class GlossManuscript {
-  constructor() {
+  constructor(id,label) {
     this.is = performance.now().toString(32).replace(".", "")
-    this.id = undefined
-    this.label = undefined
+    this.id = id
+    this.label = label
     this.thumb = DEFAULT_THUMB
     this.description = undefined
   }
@@ -30,8 +30,7 @@ class GlossManuscript {
 class GlossManuscriptThumb extends HTMLElement {
   constructor() {
     super()
-    this.ms = new GlossManuscript()
-    this.ms.id = this.getAttribute("glossing-id")
+    this.ms = new GlossManuscript(this.getAttribute("glossing-id"),this.getAttribute("title"))
     this.setAttribute("glossing-is", this.ms.is)
     this.template = `<li glossing-is="${this.ms.is}" glossing-id="${this.ms.id}">
     <header class="label">${this.ms.label ?? ""}</header>
@@ -47,7 +46,7 @@ class GlossManuscriptThumb extends HTMLElement {
     this.render()
   }
 
-  render() {
+  render(lastCall) {
     let item = document.querySelector(`[glossing-is="${this.ms.is}"]`)
     if (!(item ?? false)) { throw Error("Attempted to render missing element.") }
     const label = this.ms.name ?? this.ms.label ?? this.ms.title ?? false
@@ -66,7 +65,8 @@ class GlossManuscriptThumb extends HTMLElement {
     } else {
       _fetchImage(this.ms["@id"] ?? this.ms.id).then(src => {
         this.ms.thumb = src || DEFAULT_THUMB
-        this.render()
+        if (lastCall) return
+        this.render(lastCall)
       })
     }
   }
@@ -80,46 +80,13 @@ class GlossManuscripts extends HTMLElement {
     const tmpl = `<ul class="tiled">
     </ul>`
     this.innerHTML = tmpl
-    this.collection = this.getAttribute("gloss-collection")
+    this.uri = this.getAttribute("glossing-id")
   }
   connectedCallback() {
-    const filterObj = {
-      "__rerum.history.next": { $exists: true, $size: 0 },
-    }
-    const queryObj = {
-      $or: [
-        {
-          targetCollection: this.collection,
-        },
-        {
-          "body.targetCollection": this.collection,
-        },
-        {
-          "body.partOf": this.collection
-        }
-      ]
-    }
-    Object.assign(queryObj, filterObj)
-    fetch(RERUM_URL + "query", {
-      method: "POST",
-      mode: "cors",
-      body: JSON.stringify(queryObj),
-    })
+    fetch(this.uri)
       .then((response) => response.json())
       .then((pointers) => {
-        let list = []
-        pointers.map((tc) =>
-          list.push(
-            fetch(tc.target || tc["@id"] || tc.id).then((response) =>
-              response.json().catch((err) => {
-                throw err
-              })
-            )
-          )
-        )
-        return Promise.all(list).then((l) =>
-          l.filter((i) => !i.hasOwnProperty("__deleted"))
-        )
+        return pointers.itemListElement
       })
       .then(this.render.bind(this))
   }
@@ -127,7 +94,7 @@ class GlossManuscripts extends HTMLElement {
     const ul = this.querySelector(`ul`)
     if (!(ul ?? false)) { throw Error("List is missing!") }
     if (!Array.isArray(items)) { items = [items] }
-    ul.innerHTML = items.reduce((a, b) => a += `<gloss-manuscript-thumb glossing-id="${b['@id'] ?? b.id}"></gloss-manuscript-thumb>`, ``)
+    ul.innerHTML = items.reduce((a, b) => a += `<gloss-manuscript-thumb glossing-id="${b['@id'] ?? b.id}" title="${b.label}"></gloss-manuscript-thumb>`, ``)
   }
 }
 
