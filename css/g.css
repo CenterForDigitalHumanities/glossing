@@ -1,15 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Corben&display=swap');
 
 :root {
-  --main-bg-color    : #dfdfdf;
+  --main-bg-color    : #ffffef;
   --dark-bg-color    : #3f3f3f;
   --dark-accent-color: #823d00;
 }
 
 html {
   width   : 100vw;
-  overflow: hidden;
+  overflow: auto;
   font-family: 'Corben',serif;
+  background-color: var(--main-bg-color);
 }
 
 h1,h2,h3 {

@@ -1,3 +1,5 @@
+import * as Utils from './rerum-utils.mjs'
+
 const RERUM_URL = "http://tinydev.rerum.io/app/"
 const DEFAULT_THUMB = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
 
