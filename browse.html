@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery of Glosses</title>
+    <link rel="stylesheet" href="./css/g.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
+    <link href="./modules/nouislider.css" rel="stylesheet">
+    <script src="./modules/nouislider.min.js"></script>
+    <script type="module" src="./js/glossing.mjs"></script>
+</head>
+
+<body>
+    <gloss-header></gloss-header>
+    <div id="content" class="container">
+        <form>
+            <label for="chapter"><input type="range" min="1" max="28"></label>
+            <label for="verse"><input type="range" min="1" max="75"></label>
+            <div class="slider" id="chapter"></div>
+            <div class="slider" id="verse"></div>
+        </form>
+        <script>
+            const sliderMap = {
+                chapter: [1, 28],
+                verse: [1 - 75]
+            }
+            document.querySelectorAll(".slider").forEach(el => {
+                noUiSlider.create(el, {
+                    start: [sliderMap[el.id][0], sliderMap[el.id][1]],
+                    connect: true,
+                    range: {
+                        'min': sliderMap[el.id][0],
+                        'max': sliderMap[el.id][1]
+                    }
+                })
+            })
+        </script>
+    </div>
+    <gloss-footer></gloss-footer>
+</body>
+
+</html>

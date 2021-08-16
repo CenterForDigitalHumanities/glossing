@@ -21,6 +21,17 @@ h1,h2,h3 {
   max-width: 40em;
   margin: 0 auto;
 }
+nav {
+  text-align: center;
+  margin-top: -1.32em;
+}
+nav a {
+  background-color: var(--dark-bg-color);
+  color: var(--main-bg-color);
+  padding: 0.2em 1em;
+  font-size: .8em;
+  text-decoration: none;
+}
 footer {
   font-size: 0.68em;
 }
